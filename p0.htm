@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Calkem</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 140px;
+        background-color: #f4f4f4;
+    }
+    h1, h2 {
+        color: #333;
+    }
+
+
+</style>
+</head>
+
+<body>
+    <div class="container">
+
+        <h1>Calkem</h1>
+        <input id="inputString" type="text" value="C2H5OH"/>
+        <button id="input" type="button" onclick='calcAndDisplay()'>input</button>
+
+        <p id="out1"></p>
+        <p id="out2"></p>
+        <p id="out3"></p>
+        <p id="out4"></p>
+        <p id="out5"></p>
+    </div>
+
+    <script>
+    function addDigits(empiricalString) {
+        return empiricalString.replace(/([A-Za-z)}\]])(?=[A-Z(){}\[\]]|$)/g, '$11');
+    }
+
+    function countElements(empiricalString) {
+        const elementCounts = {};
+        const regex = /([A-Z][a-z]?)(\d*)/g;
+        let match;
+        while ((match = regex.exec(empiricalString)) !== null) {
+            const element = match[1];
+            const count = parseInt(match[2] || '1', 10);
+            elementCounts[element] = (elementCounts[element] || 0) + count;
+        }
+        return elementCounts;
+    }
+
+    function getMolarMass(elementCounts) {
+        // source: https://iupac.qmul.ac.uk/AtWt/AtWt21.html
+        const molarMasses = {
+            H : 1.008,
+            He : 4.003,
+            Li : 6.94,
+            Be : 9.012,
+            B : 10.81,
+            C : 12.011,
+            N : 14.007,
+            O : 15.999,
+            F : 18.998,
+            Ne : 20.18,
+            Na : 22.99,
+            Mg : 24.305,
+            Al : 26.982,
+            Si : 28.085,
+            P : 30.974,
+            S : 32.06,
+            Cl : 35.45,
+            Ar : 39.952,
+            K : 39.098,
+            Ca : 40.078,
+            Sc : 44.956,
+            Ti : 47.867,
+            V : 50.942,
+            Cr : 51.996,
+            Mn : 54.938,
+            Fe : 55.845,
+            Co : 58.933,
+            Ni : 58.693,
+            Cu : 63.546,
+            Zn : 65.382,
+            Ga : 69.723,
+            Ge : 72.631,
+            As : 74.922,
+            Se : 78.972,
+            Br : 79.904,
+            Kr : 83.798,
+            Rb : 85.468,
+            Sr : 87.621,
+            Y : 88.906,
+            Zr : 91.224,
+            Nb : 92.906,
+            Mo : 95.951,
+            Tc : 97.0,
+            Ru : 101.072,
+            Rh : 102.905,
+            Pd : 106.421,
+            Ag : 107.868,
+            Cd : 112.414,
+            In : 114.818,
+            Sn : 118.711,
+            Sb : 121.76,
+            Te : 127.603,
+            I : 126.904,
+            Xe : 131.294,
+            Cs : 132.905,
+            Ba : 137.328,
+            La : 138.905,
+            Ce : 140.116,
+            Pr : 140.908,
+            Nd : 144.242,
+            Pm : 145.0,
+            Sm : 150.362,
+            Eu : 151.964,
+            Gd : 157.253,
+            Tb : 158.925,
+            Dy : 162.5,
+            Ho : 164.93,
+            Er : 167.259,
+            Tm : 168.934,
+            Yb : 173.045,
+            Lu : 174.967,
+            Hf : 178.487,
+            Ta : 180.948,
+            W : 183.841,
+            Re : 186.207,
+            Os : 190.233,
+            Ir : 192.217,
+            Pt : 195.085,
+            Au : 196.967,
+            Hg : 200.592,
+            Tl : 204.38,
+            Pb : 207.21,
+            Bi : 208.98,
+            Po : 209.0,
+            At : 210.0,
+            Rn : 222.0,
+            Fr : 223.0,
+            Ra : 226.0,
+            Ac : 227.0,
+            Th : 232.038,
+            Pa : 231.036,
+            U : 238.029,
+            Np : 237.0,
+            Pu : 244.0,
+            Am : 243.0,
+            Cm : 247.0,
+            Bk : 247.0,
+            Cf : 251.0,
+            Es : 252.0,
+            Fm : 257.0,
+            Md : 258.0,
+            No : 259.0,
+            Lr : 262.0,
+            Rf : 267.0,
+            Db : 270.0,
+            Sg : 269.0,
+            Bh : 270.0,
+            Hs : 270.0,
+            Mt : 278.0,
+            Ds : 281.0,
+            Rg : 281.0,
+            Cn : 285.0,
+            Nh : 286.0,
+            Fl : 289.0,
+            Mc : 289.0,
+            Lv : 293.0,
+            Ts : 293.0,
+            Og : 294.0,
+        };
+
+        let totalMass = 0;
+        for (const [element, count] of Object.entries(elementCounts)) {
+            const mass = molarMasses[element];
+            if (mass) {
+                totalMass += mass * count;
+                } 
+            else {
+                console.warn(`Molar mass for element ${element} not found.`);
+                }
+            }
+    
+        return Number(totalMass.toFixed(3));
+    }
+
+
+    function displayValue(elementId, value) {
+        document.getElementById(elementId).innerHTML = value;
+    }
+
+
+    function parseBrackets(numberedString) {
+        const regex = /(\(\w+\))(\d+)/;
+        let splitArr = numberedString.split(regex);
+        while (splitArr.length > 1) {
+            let newString = '';
+            splitArr[1] = splitArr[1].replace(/[()]/g, ''); //without brackets
+            splitArr[1] = splitArr[1].replace(/\d+/g, match => match * splitArr[2])
+            newString += splitArr.slice(0, 2).join('');
+            newString += splitArr.slice(3, ).join('');
+            numberedString = newString;
+            console.log(numberedString);
+            splitArr = numberedString.split(regex);
+            }
+
+        return numberedString;
+        }
+
+    function getOxBal(elementCounts, molarMass){
+        // ref https://archive.org/details/cnx-org-col11124/page/n97/mode/2up
+        let M = 0; // TO DO: check the ref and FIX ME to show according to metals list/valence
+        let X = 0;
+        if ('C' in elementCounts){
+            X = elementCounts['C'];
+        }
+        let Y = 0;
+        if ('H' in elementCounts){
+            Y = elementCounts['H'];
+        }
+        let Z = 0;
+        if ('O' in elementCounts){
+            Z = elementCounts['O'];
+        }
+        let oxBal;
+        oxBal = -1600/molarMass * (2*X + Y/2 + M - Z);
+        return oxBal;
+    }
+
+    function getHazardRating(oxBal) {
+        if (oxBal > 180 || oxBal < -240) {
+            return 'Low'
+        }
+        if (oxBal > 80 || oxBal < -120) {
+            return 'Medium'
+        }
+        if (oxBal <= 80 && oxBal >= -120) {
+            return '<b>High</b>'
+        }
+    }
+
+    function calcAndDisplay(){
+        let str = document.getElementById('inputString').value;
+        const formattedStr = str.replace(/(\d+)/g, "<sub>$1</sub>");
+        displayValue('out1', "Input: " + formattedStr);
+        str = addDigits(str);
+        if (str.includes('(')) {
+            str = parseBrackets(str);
+        }
+        
+        let elementCounts = countElements(str);
+        let displayText = '';
+        for (const [element, count] of Object.entries(elementCounts)) {
+            displayText += `${element}<sub>${count}</sub>`; 
+        }
+        displayValue('out2', "Parsed: " + displayText);
+
+        let molarMass = getMolarMass(elementCounts);
+        displayValue('out3', "Mol wt: " + molarMass);
+
+        let oxBal = getOxBal(elementCounts, molarMass);
+        displayValue('out4', 'OB%: ' + oxBal.toFixed(2) + ' <i>{<b>Note:</b> M = 0}</i>');
+
+        let hazardRating = getHazardRating(oxBal);
+        displayValue('out5', 'Hazard rating: ' + '<i>' + hazardRating + '</i>');
+    }
+
+    </script>
+</body>
+
+</html>
